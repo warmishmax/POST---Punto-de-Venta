@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Punto de Venta</title>
+<style>
+
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+   Paleta: fondo cálido oscuro en topbar,
+   grises fríos para superficies, azul índigo
+   como acento primario, verde esmeralda
+   para confirmaciones, ámbar para alertas.
+   Tipografía: system-ui como cuerpo,
+   monospace para códigos/folios/datos.
+   Riesgo estético: topbar con degradado sutil
+   de dos tonos oscuros, no plano negro.
+════════════════════════════════════════════ */
+
+:root {
+  /* ── Paleta ── */
+  --color-bg-page      : #f1f4f9;
+  --color-bg-panel     : #ffffff;
+  --color-bg-subtle    : #f8fafc;
+  --color-bg-nav       : #111827;
+  --color-bg-nav-2     : #1a2234;   /* degradado topbar */
+
+  --color-accent       : #3b5bdb;   /* índigo */
+  --color-accent-light : #eef2ff;
+  --color-accent-dark  : #2f49c0;
+
+  --color-success      : #0d9e6e;
+  --color-success-bg   : #ecfdf5;
+  --color-warning      : #d08700;
+  --color-warning-bg   : #fffbeb;
+  --color-danger       : #d53939;
+  --color-danger-bg    : #fff1f1;
+  --color-info         : #0284c7;
+  --color-info-bg      : #e0f2fe;
+
+  --color-text-base    : #18212f;
+  --color-text-muted   : #5a6478;
+  --color-text-xmuted  : #96a2b8;
+  --color-text-on-dark : #e8ecf4;
+  --color-text-accent  : #3b5bdb;
+
+  --color-border       : #dde3ef;
+  --color-border-strong: #b8c1d4;
+
+  /* ── Tipografía ── */
+  --font-body  : system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono  : "Fira Code", "Cascadia Code", "Consolas", monospace;
+  --font-size-xs  : 0.70rem;
+  --font-size-sm  : 0.80rem;
+  --font-size-md  : 0.88rem;
+  --font-size-base: 0.94rem;
+  --font-size-lg  : 1.05rem;
+  --font-size-xl  : 1.20rem;
+  --font-size-2xl : 1.45rem;
+
+  /* ── Espaciado ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ── Bordes ── */
+  --radius-sm : 6px;
+  --radius-md : 10px;
+  --radius-lg : 14px;
+  --radius-xl : 20px;
+
+  /* ── Sombras ── */
+  --shadow-sm : 0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md : 0 4px 16px rgba(15,23,42,.09), 0 2px 6px rgba(15,23,42,.05);
+  --shadow-lg : 0 12px 32px rgba(15,23,42,.12), 0 4px 12px rgba(15,23,42,.07);
+
+  /* ── Transiciones ── */
+  --transition-fast: 0.14s ease;
+  --transition-base: 0.22s ease;
+}
+
+/* ════════════════════════════════════════════
+   RESET
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family  : var(--font-body);
+  font-size    : var(--font-size-base);
+  color        : var(--color-text-base);
+  background   : var(--color-bg-page);
+  min-height   : 100vh;
+  line-height  : 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ════════════════════════════════════════════
+   TOPBAR  — degradado oscuro dos tonos
+════════════════════════════════════════════ */
+.topbar {
+  position     : sticky;
+  top          : 0;
+  z-index      : 100;
+  display      : flex;
+  align-items  : center;
+  justify-content: space-between;
+  gap          : var(--space-4);
+  padding      : 0 var(--space-6);
+  height       : 56px;
+  background   : linear-gradient(135deg, var(--color-bg-nav) 0%, var(--color-bg-nav-2) 100%);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  box-shadow   : 0 2px 12px rgba(0,0,0,.25);
+  flex-shrink  : 0;
+}
+
+/* Logo / nombre */
+.topbar-brand {
+  display    : flex;
+  align-items: center;
+  gap        : var(--space-3);
+}
+
+.topbar-icon {
+  width           : 36px;
+  height          : 36px;
+  border-radius   : var(--radius-md);
+  background      : var(--color-accent);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  font-size       : 1.1rem;
+  flex-shrink     : 0;
+  box-shadow      : 0 0 0 1px rgba(255,255,255,.1);
+}
+
+.topbar-name {
+  font-size  : var(--font-size-lg);
+  font-weight: 700;
+  color      : #fff;
+  letter-spacing: -0.3px;
+}
+
+.topbar-tagline {
+  font-size: var(--font-size-xs);
+  color    : var(--color-text-xmuted);
+  margin-top: 1px;
+}
+
+/* Meta info derecha */
+.topbar-meta {
+  display    : flex;
+  align-items: center;
+  gap        : var(--space-4);
+}
+
+.topbar-pill {
+  display    : flex;
+  align-items: center;
+  gap        : var(--space-2);
+  padding    : 5px 12px;
+  border-radius: var(--radius-xl);
+  border     : 1px solid rgba(255,255,255,.1);
+  background : rgba(255,255,255,.06);
+}
+
+.topbar-pill-label {
+  font-size : var(--font-size-xs);
+  color     : var(--color-text-xmuted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.topbar-pill-value {
+  font-size  : var(--font-size-sm);
+  font-weight: 700;
+  color      : #fff;
+}
+
+.topbar-time {
+  font-family: var(--font-mono);
+  font-size  : var(--font-size-sm);
+  color      : var(--color-text-xmuted);
+  letter-spacing: .5px;
+}
+
+.topbar-divider {
+  width     : 1px;
+  height    : 22px;
+  background: rgba(255,255,255,.12);
+}
+
+/* Punto de estado (verde = abierto) */
+.status-dot {
+  width         : 8px;
+  height        : 8px;
+  border-radius : 50%;
+  background    : #22c55e;
+  box-shadow    : 0 0 0 2px rgba(34,197,94,.3);
+  animation     : pulse-dot 2.5s ease-in-out infinite;
+  flex-shrink   : 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,.3); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+}
+
+/* ════════════════════════════════════════════
+   TABS  — barra de navegación principal
+════════════════════════════════════════════ */
+.tabs-bar {
+  display         : flex;
+  align-items     : stretch;
+  padding         : 0 var(--space-6);
+  background      : var(--color-bg-panel);
+  border-bottom   : 1px solid var(--color-border);
+  box-shadow      : var(--shadow-sm);
+  overflow-x      : auto;
+  scrollbar-width : none;
+  gap             : 2px;
+}
+
+.tabs-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display        : flex;
+  align-items    : center;
+  gap            : var(--space-2);
+  padding        : 0 var(--space-4);
+  height         : 44px;
+  border         : none;
+  background     : transparent;
+  color          : var(--color-text-muted);
+  font-size      : var(--font-size-sm);
+  font-weight    : 600;
+  cursor         : pointer;
+  border-bottom  : 2px solid transparent;
+  white-space    : nowrap;
+  transition     : color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+  border-radius  : var(--radius-sm) var(--radius-sm) 0 0;
+  position       : relative;
+}
+
+.tab-btn:hover {
+  color      : var(--color-text-base);
+  background : var(--color-bg-subtle);
+}
+
+.tab-btn.active {
+  color        : var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  background   : var(--color-accent-light);
+}
+
+.tab-btn .tab-icon {
+  font-size  : 0.95rem;
+  line-height: 1;
+}
+
+/* Badge de alerta en tab */
+.tab-badge {
+  display      : inline-flex;
+  align-items  : center;
+  justify-content: center;
+  min-width    : 18px;
+  height       : 18px;
+  padding      : 0 5px;
+  border-radius: 9px;
+  background   : var(--color-danger);
+  color        : #fff;
+  font-size    : var(--font-size-xs);
+  font-weight  : 700;
+  line-height  : 1;
+}
+
+/* ════════════════════════════════════════════
+   PÁGINAS / VISTAS
+════════════════════════════════════════════ */
+.page { display: none; }
+.page.active { display: block; }
+
+.page-body {
+  padding: var(--space-5) var(--space-6);
+  max-width: 1440px;
+}
+
+/* ════════════════════════════════════════════
+   COMPONENTES BASE
+════════════════════════════════════════════ */
+
+/* ── Panel / Card ── */
+.panel {
+  background   : var(--color-bg-panel);
+  border       : 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow   : var(--shadow-sm);
+}
+
+.panel-header {
+  display        : flex;
+  align-items    : center;
+  justify-content: space-between;
+  gap            : var(--space-3);
+  padding        : var(--space-4) var(--space-5);
+  border-bottom  : 1px solid var(--color-border);
+}
+
+.panel-title {
+  font-size  : var(--font-size-md);
+  font-weight: 700;
+  color      : var(--color-text-base);
+}
+
+.panel-body {
+  padding: var(--space-5);
+}
+
+/* ── Botones ── */
+.btn {
+  display        : inline-flex;
+  align-items    : center;
+  justify-content: center;
+  gap            : var(--space-2);
+  padding        : 8px 16px;
+  border         : none;
+  border-radius  : var(--radius-md);
+  font-size      : var(--font-size-sm);
+  font-weight    : 600;
+  cursor         : pointer;
+  white-space    : nowrap;
+  transition     : background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  line-height    : 1;
+}
+
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background : var(--color-accent);
+  color      : #fff;
+  box-shadow : 0 1px 3px rgba(59,91,219,.25);
+}
+.btn-primary:hover:not(:disabled) {
+  background : var(--color-accent-dark);
+  box-shadow : 0 3px 10px rgba(59,91,219,.35);
+}
+
+.btn-secondary {
+  background : var(--color-bg-subtle);
+  color      : var(--color-text-base);
+  border     : 1px solid var(--color-border);
+}
+.btn-secondary:hover:not(:disabled) {
+  background : var(--color-border);
+}
+
+.btn-success {
+  background : var(--color-success);
+  color      : #fff;
+}
+.btn-success:hover:not(:disabled) { background: #0a8a5e; }
+
+.btn-danger {
+  background : var(--color-danger);
+  color      : #fff;
+}
+.btn-danger:hover:not(:disabled) { background: #be2e2e; }
+
+.btn-warning {
+  background : var(--color-warning);
+  color      : #fff;
+}
+.btn-warning:hover:not(:disabled) { background: #b87500; }
+
+.btn-ghost {
+  background : transparent;
+  color      : var(--color-text-muted);
+  border     : 1px solid transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background : var(--color-bg-subtle);
+  border-color: var(--color-border);
+  color      : var(--color-text-base);
+}
+
+/* Tamaños */
+.btn-xs { padding: 4px 10px; font-size: var(--font-size-xs); border-radius: var(--radius-sm); }
+.btn-sm { padding: 6px 12px; font-size: var(--font-size-sm); }
+.btn-lg { padding: 11px 22px; font-size: var(--font-size-base); }
+.btn-block { width: 100%; justify-content: center; }
+.btn-icon { padding: 7px; border-radius: var(--radius-md); }
+
+/* ── Inputs ── */
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+
+.label {
+  font-size  : var(--font-size-xs);
+  font-weight: 700;
+  color      : var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.input,
+.select,
+.textarea {
+  width         : 100%;
+  padding       : 8px 12px;
+  border        : 1px solid var(--color-border);
+  border-radius : var(--radius-md);
+  font-size     : var(--font-size-sm);
+  font-family   : inherit;
+  color         : var(--color-text-base);
+  background    : var(--color-bg-panel);
+  transition    : border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline       : none;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color : var(--color-accent);
+  box-shadow   : 0 0 0 3px rgba(59,91,219,.12);
+}
+
+.input::placeholder { color: var(--color-text-xmuted); }
+
+.textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+.input-mono {
+  font-family  : var(--font-mono);
+  font-size    : var(--font-size-sm);
+  letter-spacing: .3px;
+}
+
+.input-color { padding: 3px 5px; height: 36px; width: 48px; border-radius: var(--radius-sm); }
+
+.input-row { display: flex; gap: var(--space-2); align-items: flex-end; }
+.input-row > .input-group { flex: 1; min-width: 0; }
+.input-row > .btn { flex-shrink: 0; }
+
+/* ── Badges / Pills ── */
+.badge {
+  display      : inline-flex;
+  align-items  : center;
+  gap          : 4px;
+  padding      : 2px 9px;
+  border-radius: 20px;
+  font-size    : var(--font-size-xs);
+  font-weight  : 700;
+  white-space  : nowrap;
+}
+
+.badge-primary { background: var(--color-accent-light); color: var(--color-accent); }
+.badge-success { background: var(--color-success-bg); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.badge-danger  { background: var(--color-danger-bg);  color: var(--color-danger); }
+.badge-info    { background: var(--color-info-bg);    color: var(--color-info); }
+.badge-neutral { background: var(--color-bg-subtle);  color: var(--color-text-muted); border: 1px solid var(--color-border); }
+
+/* ── Stats card ── */
+.stat-card {
+  background   : var(--color-bg-panel);
+  border       : 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding      : var(--space-5);
+  border-left  : 4px solid var(--color-accent);
+  box-shadow   : var(--shadow-sm);
+}
+
+.stat-label {
+  font-size    : var(--font-size-xs);
+  font-weight  : 700;
+  color        : var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: var(--space-2);
+}
+
+.stat-value {
+  font-size  : var(--font-size-2xl);
+  font-weight: 700;
+  color      : var(--color-text-base);
+  line-height: 1;
+  font-family: var(--font-mono);
+}
+
+.stat-sub {
+  font-size : var(--font-size-xs);
+  color     : var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+/* ── Tablas ── */
+.table-wrap {
+  overflow-x   : auto;
+  border-radius: var(--radius-lg);
+  border       : 1px solid var(--color-border);
+}
+
+table {
+  width          : 100%;
+  border-collapse: collapse;
+  min-width      : 540px;
+}
+
+thead th {
+  background   : var(--color-bg-subtle);
+  padding      : 9px 14px;
+  text-align   : left;
+  font-size    : var(--font-size-xs);
+  font-weight  : 700;
+  color        : var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--color-border);
+  white-space  : nowrap;
+}
+
+tbody td {
+  padding      : 10px 14px;
+  font-size    : var(--font-size-sm);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--color-accent-light); }
+
+/* ── Alertas ── */
+.alert {
+  display      : flex;
+  align-items  : flex-start;
+  gap          : var(--space-3);
+  padding      : var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size    : var(--font-size-sm);
+  font-weight  : 500;
+}
+
+.alert-warning { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid #fcd34d; }
+.alert-danger  { background: var(--color-danger-bg);  color: var(--color-danger);  border: 1px solid #fca5a5; }
+.alert-success { background: var(--color-success-bg); color: var(--color-success); border: 1px solid #6ee7b7; }
+.alert-info    { background: var(--color-info-bg);    color: var(--color-info);    border: 1px solid #7dd3fc; }
+
+/* ── Empty state ── */
+.empty-state {
+  display        : flex;
+  flex-direction : column;
+  align-items    : center;
+  justify-content: center;
+  padding        : var(--space-8) var(--space-6);
+  text-align     : center;
+  color          : var(--color-text-xmuted);
+}
+
+.empty-state-icon { font-size: 2.4rem; margin-bottom: var(--space-4); opacity: .6; }
+.empty-state-title { font-size: var(--font-size-md); font-weight: 700; color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.empty-state-sub   { font-size: var(--font-size-sm); }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--color-border); margin: var(--space-4) 0; }
+.divider-label { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-xmuted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+.divider-label::before, .divider-label::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+
+/* ── Section header ── */
+.section-hd {
+  display        : flex;
+  align-items    : center;
+  justify-content: space-between;
+  gap            : var(--space-3);
+  margin-bottom  : var(--space-4);
+  flex-wrap      : wrap;
+}
+
+.section-title {
+  font-size  : var(--font-size-lg);
+  font-weight: 700;
+  color      : var(--color-text-base);
+}
+
+.section-sub {
+  font-size : var(--font-size-sm);
+  color     : var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ── Grids utilitarios ── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4); }
+
+/* ── Flex utilitarios ── */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+
+/* ── Textos utilitarios ── */
+.text-muted  { color: var(--color-text-muted); }
+.text-xmuted { color: var(--color-text-xmuted); }
+.text-accent { color: var(--color-accent); }
+.text-success{ color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-warning{ color: var(--color-warning); }
+.text-sm     { font-size: var(--font-size-sm); }
+.text-xs     { font-size: var(--font-size-xs); }
+.text-mono   { font-family: var(--font-mono); }
+.font-bold   { font-weight: 700; }
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+
+/* ════════════════════════════════════════════
+   MODALES
+════════════════════════════════════════════ */
+.modal-overlay {
+  display    : none;
+  position   : fixed;
+  inset      : 0;
+  background : rgba(10, 15, 28, 0.60);
+  z-index    : 200;
+  place-items: center;
+  padding    : var(--space-5);
+  backdrop-filter: blur(3px);
+}
+
+.modal-overlay.open { display: grid; }
+
+.modal-box {
+  background   : var(--color-bg-panel);
+  border-radius: var(--radius-xl);
+  padding      : var(--space-6);
+  width        : min(540px, 100%);
+  max-height   : 88vh;
+  overflow-y   : auto;
+  box-shadow   : var(--shadow-lg);
+  display      : flex;
+  flex-direction: column;
+  gap          : var(--space-4);
+  animation    : modal-in .18s ease;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(-10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+
+.modal-header {
+  display        : flex;
+  align-items    : center;
+  justify-content: space-between;
+  gap            : var(--space-3);
+  padding-bottom : var(--space-4);
+  border-bottom  : 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-size  : var(--font-size-lg);
+  font-weight: 700;
+  color      : var(--color-text-base);
+}
+
+.modal-close {
+  width        : 30px;
+  height       : 30px;
+  border       : none;
+  background   : var(--color-bg-subtle);
+  border-radius: var(--radius-sm);
+  cursor       : pointer;
+  color        : var(--color-text-muted);
+  font-size    : 1rem;
+  display      : flex;
+  align-items  : center;
+  justify-content: center;
+  transition   : background var(--transition-fast), color var(--transition-fast);
+  flex-shrink  : 0;
+}
+
+.modal-close:hover { background: var(--color-danger-bg); color: var(--color-danger); }
+
+.modal-footer {
+  display        : flex;
+  justify-content: flex-end;
+  gap            : var(--space-3);
+  padding-top    : var(--space-4);
+  border-top     : 1px solid var(--color-border);
+  margin-top     : auto;
+}
+
+/* Modal de confirmación */
+.confirm-box {
+  background   : var(--color-bg-panel);
+  border-radius: var(--radius-xl);
+  padding      : var(--space-8) var(--space-6);
+  width        : min(400px, 100%);
+  box-shadow   : var(--shadow-lg);
+  display      : flex;
+  flex-direction: column;
+  align-items  : center;
+  gap          : var(--space-4);
+  text-align   : center;
+  animation    : modal-in .18s ease;
+}
+
+.confirm-icon  { font-size: 2.5rem; line-height: 1; }
+.confirm-title { font-size: var(--font-size-xl); font-weight: 700; }
+.confirm-msg   { font-size: var(--font-size-sm); color: var(--color-text-muted); line-height: 1.6; max-width: 300px; }
+
+.confirm-actions {
+  display: flex;
+  gap    : var(--space-3);
+  width  : 100%;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+.toast-container {
+  position     : fixed;
+  bottom       : var(--space-6);
+  right        : var(--space-6);
+  z-index      : 999;
+  display      : flex;
+  flex-direction: column;
+  gap          : var(--space-2);
+  pointer-events: none;
+}
+
+.toast {
+  display        : flex;
+  align-items    : center;
+  gap            : var(--space-3);
+  padding        : 10px 16px;
+  border-radius  : var(--radius-md);
+  font-size      : var(--font-size-sm);
+  font-weight    : 600;
+  box-shadow     : var(--shadow-lg);
+  background     : var(--color-bg-nav);
+  color          : #fff;
+  min-width      : 220px;
+  max-width      : 340px;
+  pointer-events : auto;
+  opacity        : 0;
+  transform      : translateY(8px) scale(.96);
+  transition     : opacity .22s ease, transform .22s ease;
+}
+
+.toast.show { opacity: 1; transform: translateY(0) scale(1); }
+.toast.hiding { opacity: 0; transform: translateY(4px) scale(.97); }
+
+.toast-dot {
+  width        : 8px;
+  height       : 8px;
+  border-radius: 50%;
+  flex-shrink  : 0;
+}
+
+.toast-default .toast-dot { background: var(--color-accent); }
+.toast-success .toast-dot { background: var(--color-success); }
+.toast-danger  .toast-dot { background: var(--color-danger); }
+.toast-warning .toast-dot { background: var(--color-warning); }
+
+/* ════════════════════════════════════════════
+   PÁGINAS — PLACEHOLDERS INICIALES
+════════════════════════════════════════════ */
+
+/* ── POS ── */
+#page-pos .pos-placeholder {
+  display        : grid;
+  grid-template-columns: 1fr 360px;
+  gap            : var(--space-4);
+  height         : calc(100vh - 100px);
+}
+
+/* ── Kanban placeholder ── */
+.kanban-placeholder {
+  display              : grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap                  : var(--space-4);
+}
+
+.kanban-col-placeholder {
+  background   : var(--color-bg-panel);
+  border       : 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding      : var(--space-4);
+  min-height   : 320px;
+}
+
+.kanban-col-placeholder h3 {
+  font-size    : var(--font-size-sm);
+  font-weight  : 700;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--color-border);
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .kanban-placeholder { grid-template-columns: repeat(2, 1fr); }
+  #page-pos .pos-placeholder { grid-template-columns: 1fr; height: auto; }
+}
+
+@media (max-width: 768px) {
+  .topbar { padding: 0 var(--space-4); }
+  .tabs-bar { padding: 0 var(--space-4); }
+  .page-body { padding: var(--space-4); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .topbar-time { display: none; }
+  .topbar-divider { display: none; }
+}
+
+@media (max-width: 480px) {
+  .topbar-tagline { display: none; }
+  .kanban-placeholder { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════
+   SCROLLBAR PERSONALIZADO
+════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-xmuted); }
+
+/* Print: reset general */
+@media print {
+  .topbar, .tabs-bar, .toast-container, .modal-overlay { display: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════ -->
+<header class="topbar" role="banner">
+
+  <!-- Marca -->
+  <div class="topbar-brand">
+    <div class="topbar-icon" aria-hidden="true">🏪</div>
+    <div>
+      <div class="topbar-name" id="hdr-biz-name">Mi Negocio</div>
+      <div class="topbar-tagline">Sistema de punto de venta</div>
+    </div>
+  </div>
+
+  <!-- Meta info -->
+  <div class="topbar-meta">
+    <div class="topbar-pill" aria-label="Cajero activo">
+      <div class="status-dot" aria-hidden="true"></div>
+      <span class="topbar-pill-label">Cajero</span>
+      <span class="topbar-pill-value" id="hdr-cashier">—</span>
+    </div>
+    <div class="topbar-divider" aria-hidden="true"></div>
+    <time class="topbar-time" id="hdr-clock" aria-label="Hora del sistema"></time>
+    <div class="topbar-divider" aria-hidden="true"></div>
+    <div class="topbar-pill" aria-label="Folio de la próxima venta">
+      <span class="topbar-pill-label">Folio</span>
+      <span class="topbar-pill-value text-mono" id="hdr-folio">#—</span>
+    </div>
+  </div>
+
+</header>
+
+<!-- ════════════════════════════════════════════
+     BARRA DE TABS
+════════════════════════════════════════════ -->
+<nav class="tabs-bar" role="navigation" aria-label="Secciones del POS">
+
+  <button class="tab-btn active" data-tab="pos" aria-current="page">
+    <span class="tab-icon" aria-hidden="true">🛒</span>
+    Venta
+  </button>
+
+  <button class="tab-btn" data-tab="inventory">
+    <span class="tab-icon" aria-hidden="true">📦</span>
+    Inventario
+    <span class="tab-badge" id="badge-inventory" style="display:none" aria-label="Alertas de inventario">0</span>
+  </button>
+
+  <button class="tab-btn" data-tab="history">
+    <span class="tab-icon" aria-hidden="true">🧾</span>
+    Historial
+  </button>
+
+  <button class="tab-btn" data-tab="reports">
+    <span class="tab-icon" aria-hidden="true">📊</span>
+    Reportes
+  </button>
+
+  <button class="tab-btn" data-tab="kanban">
+    <span class="tab-icon" aria-hidden="true">📋</span>
+    Kanban
+    <span class="tab-badge" id="badge-kanban" style="display:none" aria-label="Tareas pendientes">0</span>
+  </button>
+
+  <button class="tab-btn" data-tab="config">
+    <span class="tab-icon" aria-hidden="true">⚙️</span>
+    Config
+  </button>
+
+</nav>
+
+<!-- ════════════════════════════════════════════
+     PÁGINAS
+════════════════════════════════════════════ -->
+
+<!-- ── VENTA ── -->
+<main class="page active" id="page-pos" aria-label="Terminal de venta">
+  <div class="page-body">
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Terminal de venta</h1>
+        <p class="section-sub">Busca productos o escanea un código de barras para agregarlos al carrito</p>
+      </div>
+    </div>
+
+    <!-- Placeholder visual hasta que el módulo se construya -->
+    <div class="pos-placeholder">
+
+      <!-- Columna izquierda: búsqueda y productos -->
+      <div class="flex-col gap-4">
+        <div class="panel">
+          <div class="panel-body">
+            <div class="input-row">
+              <div class="input-group" style="flex:1">
+                <label class="label" for="pos-search">Buscar producto o código de barras</label>
+                <input
+                  class="input input-mono"
+                  id="pos-search"
+                  type="text"
+                  placeholder="Nombre, categoría o escanea un código…"
+                  autocomplete="off"
+                  aria-label="Buscar producto"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de productos (placeholder) -->
+        <div class="panel" style="flex:1">
+          <div class="panel-header">
+            <span class="panel-title">Productos</span>
+            <span class="badge badge-neutral" id="pos-prod-count">— artículos</span>
+          </div>
+          <div class="panel-body">
+            <div class="empty-state">
+              <div class="empty-state-icon">📦</div>
+              <div class="empty-state-title">Cargando productos…</div>
+              <p class="empty-state-sub">El módulo de inventario se construirá en el siguiente paso.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha: carrito -->
+      <div class="flex-col gap-4" style="height:100%">
+        <div class="panel flex-col" style="flex:1">
+          <div class="panel-header" style="background:var(--color-bg-nav); border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-color: transparent;">
+            <span class="panel-title" style="color:#fff">🛒 Carrito</span>
+            <button class="btn btn-ghost btn-xs" style="color:rgba(255,255,255,.6)" id="btn-clear-cart">Vaciar</button>
+          </div>
+          <div class="panel-body flex-col" style="flex:1">
+            <div class="empty-state">
+              <div class="empty-state-icon">🛍️</div>
+              <div class="empty-state-title">Carrito vacío</div>
+              <p class="empty-state-sub">Agrega productos para comenzar una venta.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Totales placeholder -->
+        <div class="panel">
+          <div class="panel-body flex-col gap-3">
+            <div class="flex justify-between text-sm">
+              <span class="text-muted">Subtotal</span><span class="font-bold text-mono">$0.00</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-muted">IVA (16%)</span><span class="font-bold text-mono">$0.00</span>
+            </div>
+            <div class="divider"></div>
+            <div class="flex justify-between" style="font-size:var(--font-size-xl)">
+              <span class="font-bold">TOTAL</span><span class="font-bold text-mono text-accent">$0.00</span>
+            </div>
+            <button class="btn btn-success btn-lg btn-block" disabled>
+              ✔ Cobrar
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pos-placeholder -->
+  </div>
+</main>
+
+<!-- ── INVENTARIO ── -->
+<section class="page" id="page-inventory" aria-label="Inventario de productos">
+  <div class="page-body">
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Inventario</h1>
+        <p class="section-sub">Gestiona tu catálogo de productos, precios y stock</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-secondary btn-sm">↓ Exportar CSV</button>
+        <button class="btn btn-primary">+ Agregar producto</button>
+      </div>
+    </div>
+
+    <!-- Alertas stock (placeholder) -->
+    <div id="inventory-alerts" class="flex-col gap-2 mt-3" style="margin-bottom:var(--space-4)"></div>
+
+    <!-- Filtros -->
+    <div class="panel" style="margin-bottom:var(--space-4)">
+      <div class="panel-body">
+        <div class="flex gap-3" style="flex-wrap:wrap">
+          <div class="input-group" style="flex:2;min-width:200px">
+            <label class="label" for="inv-search">Buscar</label>
+            <input class="input" id="inv-search" type="text" placeholder="Nombre, código de barras…"/>
+          </div>
+          <div class="input-group" style="flex:1;min-width:130px">
+            <label class="label" for="inv-cat">Categoría</label>
+            <select class="select" id="inv-cat">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex:1;min-width:130px">
+            <label class="label" for="inv-status">Estado de stock</label>
+            <select class="select" id="inv-status">
+              <option value="">Todos</option>
+              <option value="ok">En stock</option>
+              <option value="low">Stock bajo</option>
+              <option value="out">Sin stock</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table aria-label="Lista de productos en inventario">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>P. Compra</th>
+            <th>P. Venta</th>
+            <th>Margen</th>
+            <th>Stock</th>
+            <th>Mín.</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="inv-tbody">
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-state-icon">📦</div>
+                <div class="empty-state-title">Módulo pendiente</div>
+                <p class="empty-state-sub">Este módulo se construirá en el prompt 03.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── HISTORIAL ── -->
+<section class="page" id="page-history" aria-label="Historial de ventas">
+  <div class="page-body">
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Historial de ventas</h1>
+        <p class="section-sub">Consulta, detalla y reimprime ventas anteriores</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-secondary btn-sm">↓ Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- Filtro fechas -->
+    <div class="panel" style="margin-bottom:var(--space-4)">
+      <div class="panel-body">
+        <div class="flex gap-3" style="flex-wrap:wrap; align-items:flex-end">
+          <div class="input-group">
+            <label class="label" for="hist-from">Desde</label>
+            <input class="input" id="hist-from" type="date"/>
+          </div>
+          <div class="input-group">
+            <label class="label" for="hist-to">Hasta</label>
+            <input class="input" id="hist-to" type="date"/>
+          </div>
+          <div class="input-group">
+            <label class="label" for="hist-method">Método de pago</label>
+            <select class="select" id="hist-method">
+              <option value="">Todos</option>
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="mixed">Mixto</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary">Filtrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table aria-label="Historial de ventas">
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha</th>
+            <th>Artículos</th>
+            <th>Subtotal</th>
+            <th>IVA</th>
+            <th>Descuento</th>
+            <th>Total</th>
+            <th>Método</th>
+            <th>Cajero</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="hist-tbody">
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-state-icon">🧾</div>
+                <div class="empty-state-title">Sin ventas aún</div>
+                <p class="empty-state-sub">Las ventas completadas aparecerán aquí.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── REPORTES ── -->
+<section class="page" id="page-reports" aria-label="Reportes de ventas">
+  <div class="page-body">
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Reportes</h1>
+        <p class="section-sub">Métricas de ingresos, utilidad y productos más vendidos</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-secondary btn-sm">↓ Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- Filtro de período -->
+    <div class="panel" style="margin-bottom:var(--space-5)">
+      <div class="panel-body">
+        <div class="flex gap-3" style="align-items:flex-end; flex-wrap:wrap">
+          <div class="input-group">
+            <label class="label" for="rep-from">Desde</label>
+            <input class="input" id="rep-from" type="date"/>
+          </div>
+          <div class="input-group">
+            <label class="label" for="rep-to">Hasta</label>
+            <input class="input" id="rep-to" type="date"/>
+          </div>
+          <button class="btn btn-primary">Generar reporte</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs placeholder -->
+    <div class="stats-grid" style="margin-bottom:var(--space-5)" id="rep-kpis">
+      <div class="stat-card">
+        <div class="stat-label">Ventas totales</div>
+        <div class="stat-value">—</div>
+      </div>
+      <div class="stat-card" style="border-left-color:var(--color-success)">
+        <div class="stat-label">Ingresos</div>
+        <div class="stat-value">—</div>
+      </div>
+      <div class="stat-card" style="border-left-color:var(--color-warning)">
+        <div class="stat-label">Costo</div>
+        <div class="stat-value">—</div>
+      </div>
+      <div class="stat-card" style="border-left-color:#059669">
+        <div class="stat-label">Utilidad bruta</div>
+        <div class="stat-value">—</div>
+        <div class="stat-sub">Módulo pendiente (prompt 09)</div>
+      </div>
+    </div>
+
+    <div class="grid-2" id="rep-tables">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Top productos</span></div>
+        <div class="panel-body">
+          <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <p class="empty-state-sub">Genera un reporte para ver datos.</p>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Por método de pago</span></div>
+        <div class="panel-body">
+          <div class="empty-state">
+            <div class="empty-state-icon">💳</div>
+            <p class="empty-state-sub">Genera un reporte para ver datos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── KANBAN ── -->
+<section class="page" id="page-kanban" aria-label="Tablero de tareas">
+  <div class="page-body">
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Tablero Kanban</h1>
+        <p class="section-sub">Gestión de tareas y seguimiento del negocio</p>
+      </div>
+      <button class="btn btn-primary">+ Nueva tarea</button>
+    </div>
+
+    <!-- Columnas placeholder -->
+    <div class="kanban-placeholder" id="kanban-board">
+      <div class="kanban-col-placeholder">
+        <h3 style="color:var(--color-text-muted);border-bottom-color:#94a3b8">
+          ⬜ Pendiente <span class="badge badge-neutral" id="k-count-pending">0</span>
+        </h3>
+        <div id="k-col-pending"></div>
+      </div>
+      <div class="kanban-col-placeholder" style="border-top:3px solid var(--color-warning)">
+        <h3 style="color:var(--color-warning);border-bottom-color:var(--color-warning)">
+          🟡 En proceso <span class="badge badge-warning" id="k-count-progress">0</span>
+        </h3>
+        <div id="k-col-progress"></div>
+      </div>
+      <div class="kanban-col-placeholder" style="border-top:3px solid var(--color-accent)">
+        <h3 style="color:var(--color-accent);border-bottom-color:var(--color-accent)">
+          🔵 Revisión <span class="badge badge-primary" id="k-count-review">0</span>
+        </h3>
+        <div id="k-col-review"></div>
+      </div>
+      <div class="kanban-col-placeholder" style="border-top:3px solid var(--color-success)">
+        <h3 style="color:var(--color-success);border-bottom-color:var(--color-success)">
+          🟢 Completado <span class="badge badge-success" id="k-count-done">0</span>
+        </h3>
+        <div id="k-col-done"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONFIG ── -->
+<section class="page" id="page-config" aria-label="Configuración del sistema">
+  <div class="page-body">
+
+    <!-- ── Header con estado de cambios ── -->
+    <div class="section-hd">
+      <div>
+        <h1 class="section-title">Configuración</h1>
+        <p class="section-sub">Ajusta los datos de tu negocio, impuestos y preferencias del sistema</p>
+      </div>
+      <div class="flex gap-3 items-center">
+        <!-- Indicador de cambios sin guardar -->
+        <span id="cfg-unsaved-badge" style="display:none" class="badge badge-warning">
+          ● Cambios sin guardar
+        </span>
+        <button class="btn btn-secondary" id="btn-cfg-discard" style="display:none">
+          Descartar
+        </button>
+        <button class="btn btn-primary" id="btn-save-config">
+          ✔ Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         LAYOUT: Formulario + Preview
+    ══════════════════════════════════ -->
+    <div style="display:grid; grid-template-columns:1fr 320px; gap:var(--space-5); align-items:start">
+
+      <!-- Columna izquierda: Formularios -->
+      <div class="flex-col gap-4" style="gap:var(--space-4); display:flex; flex-direction:column">
+
+        <!-- ── 1. Información del negocio ── -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🏪 Información del negocio</span>
+            <span class="badge badge-neutral text-xs">Aparece en el ticket</span>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4)">
+
+              <div class="input-group" style="grid-column:1/-1">
+                <label class="label" for="cfg-biz-name">Nombre del negocio *</label>
+                <input class="input" id="cfg-biz-name" type="text"
+                  placeholder="Ej. Abarrotes El Sol"
+                  maxlength="60"
+                  style="font-size:var(--font-size-base); font-weight:600"/>
+                <span class="text-xs text-muted" id="cfg-biz-name-count">0/60 caracteres</span>
+              </div>
+
+              <div class="input-group">
+                <label class="label" for="cfg-rfc">RFC</label>
+                <input class="input input-mono" id="cfg-rfc" type="text"
+                  placeholder="XAXX010101000"
+                  maxlength="13"
+                  style="text-transform:uppercase"
+                  oninput="this.value=this.value.toUpperCase()"/>
+                <span class="text-xs text-muted">12–13 caracteres. Deja en blanco si no aplica.</span>
+              </div>
+
+              <div class="input-group">
+                <label class="label" for="cfg-phone">Teléfono</label>
+                <input class="input input-mono" id="cfg-phone" type="tel"
+                  placeholder="55 1234 5678"/>
+              </div>
+
+              <div class="input-group" style="grid-column:1/-1">
+                <label class="label" for="cfg-address">Dirección completa</label>
+                <input class="input" id="cfg-address" type="text"
+                  placeholder="Calle, Núm, Colonia, Ciudad, CP"
+                  maxlength="120"/>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 2. Cajero y ticket ── -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">👤 Cajero y ticket</span>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4)">
+
+              <div class="input-group">
+                <label class="label" for="cfg-cashier">Nombre del cajero activo *</label>
+                <input class="input" id="cfg-cashier" type="text"
+                  placeholder="Nombre completo"
+                  maxlength="50"/>
+                <span class="text-xs text-muted">Se muestra en el header y en cada ticket.</span>
+              </div>
+
+              <div class="input-group">
+                <label class="label" for="cfg-footer">Mensaje al pie del ticket</label>
+                <input class="input" id="cfg-footer" type="text"
+                  placeholder="¡Gracias por su compra!"
+                  maxlength="80"/>
+                <span class="text-xs text-muted" id="cfg-footer-count">0/80 caracteres</span>
+              </div>
+
+              <div class="input-group" style="grid-column:1/-1">
+                <label class="label" for="cfg-ticket-note">Nota adicional en ticket (opcional)</label>
+                <textarea class="textarea" id="cfg-ticket-note"
+                  placeholder="Ej. No se aceptan devoluciones sin ticket. Horario: Lun–Sáb 8am–9pm."
+                  maxlength="160"
+                  rows="2"></textarea>
+                <span class="text-xs text-muted" id="cfg-note-count">0/160 caracteres</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 3. Impuestos y moneda ── -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">💰 Impuestos y moneda</span>
+            <span class="badge badge-neutral text-xs">Afecta todos los cálculos</span>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-4)">
+
+              <div class="input-group">
+                <label class="label" for="cfg-iva">Tasa de IVA (%)</label>
+                <input class="input input-mono" id="cfg-iva"
+                  type="number" min="0" max="100" step="0.5" value="16"
+                  style="font-size:var(--font-size-lg); font-weight:700; text-align:center"/>
+                <span class="text-xs text-muted">México: 16% estándar / 8% frontera</span>
+              </div>
+
+              <div class="input-group">
+                <label class="label" for="cfg-iva-mode">¿Cómo se aplica el IVA?</label>
+                <select class="select" id="cfg-iva-mode">
+                  <option value="excluded">No incluido — se suma al total</option>
+                  <option value="included">Incluido — el precio ya lo lleva</option>
+                </select>
+                <span class="text-xs text-muted" id="cfg-iva-hint">
+                  El precio de venta + IVA = total al cliente.
+                </span>
+              </div>
+
+              <div class="input-group">
+                <label class="label" for="cfg-currency">Símbolo de moneda</label>
+                <input class="input input-mono" id="cfg-currency"
+                  type="text" value="$" maxlength="4"
+                  style="font-size:var(--font-size-xl); font-weight:700; text-align:center"/>
+                <span class="text-xs text-muted">$ MXN · € · Q · S/ · etc.</span>
+              </div>
+
+            </div>
+
+            <!-- Ejemplo de cálculo en vivo -->
+            <div id="iva-example" style="
+              margin-top:var(--space-4);
+              padding:var(--space-3) var(--space-4);
+              background:var(--color-accent-light);
+              border:1px solid var(--color-accent);
+              border-radius:var(--radius-md);
+              font-size:var(--font-size-sm);
+            ">
+              <span style="font-weight:700; color:var(--color-accent)">Ejemplo:</span>
+              <span id="iva-example-text" style="color:var(--color-text-base)"></span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /columna izquierda -->
+
+      <!-- Columna derecha: Preview del ticket + Estadísticas -->
+      <div class="flex-col" style="display:flex; flex-direction:column; gap:var(--space-4); position:sticky; top:16px">
+
+        <!-- Preview ticket en vivo -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Vista previa del ticket</span>
+            <span class="badge badge-neutral text-xs">Tiempo real</span>
+          </div>
+          <div style="padding:var(--space-3)">
+            <div id="cfg-ticket-preview" style="
+              font-family: 'Courier New', Courier, monospace;
+              font-size: 11px;
+              line-height: 1.5;
+              background: #fff;
+              border: 1px dashed var(--color-border-strong);
+              border-radius: var(--radius-md);
+              padding: 14px 16px;
+              color: var(--color-text-base);
+              white-space: pre-wrap;
+              word-break: break-word;
+            "></div>
+          </div>
+        </div>
+
+        <!-- Estadísticas del negocio -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Resumen del sistema</span>
+          </div>
+          <div class="panel-body" style="padding:var(--space-4)">
+            <div style="display:flex; flex-direction:column; gap:var(--space-3)" id="cfg-stats-list"></div>
+          </div>
+        </div>
+
+      </div><!-- /columna derecha -->
+
+    </div><!-- /layout grid -->
+
+    <!-- ══════════════════════════════════
+         GESTIÓN DE DATOS
+    ══════════════════════════════════ -->
+    <div class="panel" style="margin-top:var(--space-5)">
+      <div class="panel-header">
+        <span class="panel-title">🗄 Gestión de datos</span>
+        <span class="badge badge-danger" style="font-size:var(--font-size-xs)">
+          ⚠ Acciones irreversibles con doble confirmación
+        </span>
+      </div>
+      <div class="panel-body">
+
+        <!-- Tarjetas de acción -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:var(--space-4)">
+
+          <!-- Exportar JSON -->
+          <div style="
+            border:1px solid var(--color-border);
+            border-radius:var(--radius-md);
+            padding:var(--space-4);
+            display:flex; flex-direction:column; gap:var(--space-3)
+          ">
+            <div style="font-size:1.6rem">📦</div>
+            <div>
+              <div style="font-weight:700; font-size:var(--font-size-sm)">Exportar copia de seguridad</div>
+              <div class="text-xs text-muted" style="margin-top:2px">
+                Descarga todos los datos (productos, ventas, config) en formato JSON.
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-export-data" style="align-self:flex-start">
+              ↓ Exportar JSON
+            </button>
+          </div>
+
+          <!-- Importar JSON -->
+          <div style="
+            border:1px solid var(--color-border);
+            border-radius:var(--radius-md);
+            padding:var(--space-4);
+            display:flex; flex-direction:column; gap:var(--space-3)
+          ">
+            <div style="font-size:1.6rem">📂</div>
+            <div>
+              <div style="font-weight:700; font-size:var(--font-size-sm)">Importar copia de seguridad</div>
+              <div class="text-xs text-muted" style="margin-top:2px">
+                Restaura un archivo JSON exportado anteriormente.
+              </div>
+            </div>
+            <label class="btn btn-secondary btn-sm" style="align-self:flex-start; cursor:pointer; margin:0">
+              ↑ Importar JSON
+              <input type="file" id="btn-import-data" accept=".json" style="display:none"/>
+            </label>
+          </div>
+
+          <!-- Limpiar historial -->
+          <div style="
+            border:1px solid #fde68a;
+            border-radius:var(--radius-md);
+            padding:var(--space-4);
+            background:var(--color-warning-bg);
+            display:flex; flex-direction:column; gap:var(--space-3)
+          ">
+            <div style="font-size:1.6rem">🗑️</div>
+            <div>
+              <div style="font-weight:700; font-size:var(--font-size-sm); color:var(--color-warning)">Limpiar historial de ventas</div>
+              <div class="text-xs" style="margin-top:2px; color:var(--color-warning)">
+                Elimina todas las ventas registradas y reinicia el folio. Los productos <strong>no</strong> se borran.
+              </div>
+            </div>
+            <button class="btn btn-warning btn-sm" id="btn-clear-history" style="align-self:flex-start">
+              🗑 Limpiar historial
+            </button>
+          </div>
+
+          <!-- Restablecer sistema -->
+          <div style="
+            border:1px solid #fca5a5;
+            border-radius:var(--radius-md);
+            padding:var(--space-4);
+            background:var(--color-danger-bg);
+            display:flex; flex-direction:column; gap:var(--space-3)
+          ">
+            <div style="font-size:1.6rem">💥</div>
+            <div>
+              <div style="font-weight:700; font-size:var(--font-size-sm); color:var(--color-danger)">Restablecer todo el sistema</div>
+              <div class="text-xs" style="margin-top:2px; color:var(--color-danger)">
+                Borra productos, ventas, tareas y configuración. Vuelve a los datos de ejemplo de fábrica.
+              </div>
+            </div>
+            <button class="btn btn-danger btn-sm" id="btn-reset-all" style="align-self:flex-start">
+              ⚠ Restablecer sistema
+            </button>
+          </div>
+
+        </div><!-- /grid acciones -->
+
+        <!-- Info de almacenamiento -->
+        <div style="
+          margin-top:var(--space-4);
+          padding:var(--space-3) var(--space-4);
+          background:var(--color-bg-subtle);
+          border-radius:var(--radius-md);
+          border:1px solid var(--color-border);
+          display:flex; align-items:center; gap:var(--space-4);
+          flex-wrap:wrap; font-size:var(--font-size-xs); color:var(--color-text-muted)
+        " id="cfg-storage-info">
+          💾 Calculando almacenamiento…
+        </div>
+
+      </div>
+    </div><!-- /gestión de datos -->
+
+  </div><!-- /page-body -->
+</section>
+
+<!-- ════════════════════════════════════════════
+     MODAL — CONFIRMACIÓN DOBLE
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title-text">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon" aria-hidden="true">⚠️</div>
+    <h2 class="confirm-title" id="confirm-title-text">¿Estás seguro?</h2>
+    <p class="confirm-msg" id="confirm-msg-text">Esta acción no se puede deshacer.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" style="min-width:110px" id="btn-confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger"    style="min-width:110px" id="btn-confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     CONTENEDOR DE TOASTS
+════════════════════════════════════════════ -->
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ════════════════════════════════════════════
+     PRINT CONTAINER  (oculto en pantalla)
+════════════════════════════════════════════ -->
+<div id="print-area" style="display:none" aria-hidden="true"></div>
+
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   1. CONSTANTES Y ESTADO GLOBAL
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+const STORAGE_KEY = 'pos_system_v1';
+
+/**
+ * Estructura completa del estado del sistema.
+ * Cada módulo posterior trabaja sobre esta misma estructura.
+ *
+ * @typedef {Object} AppState
+ * @property {Config}    config   - Configuración del negocio
+ * @property {Product[]} products - Catálogo de productos
+ * @property {Sale[]}    sales    - Historial de ventas
+ * @property {KanbanTask[]} kanban - Tareas del tablero
+ * @property {number}    folio    - Último folio usado (se incrementa en cada venta)
+ */
+
+/** Estado en memoria (referencia mutable). Iniciado por loadState(). */
+let state = null;
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   2. DATOS POR DEFECTO (demo)
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function buildDefaultState() {
+  return {
+    config: {
+      bizName   : 'Abarrotes El Sol',
+      rfc       : 'XAXX010101000',
+      address   : 'Av. Insurgentes 123, Col. Centro, CDMX',
+      phone     : '55 1234 5678',
+      cashier   : 'Ana López',
+      footer    : '¡Gracias por su compra! Vuelva pronto.',
+      iva       : 16,       // porcentaje
+      ivaMode   : 'excluded', // 'excluded' | 'included'
+      currency  : '$',
+    },
+
+    products: [
+      {
+        id        : 'p-001',
+        barcode   : '7501055300117',
+        name      : 'Coca-Cola 600 ml',
+        category  : 'Bebidas',
+        buyPrice  : 10.00,
+        sellPrice : 18.00,
+        stock     : 48,
+        minStock  : 12,
+        description: 'Refresco de cola botella PET 600 ml',
+      },
+      {
+        id        : 'p-002',
+        barcode   : '7501030479027',
+        name      : 'Papas Sabritas Original',
+        category  : 'Botanas',
+        buyPrice  : 8.50,
+        sellPrice : 15.00,
+        stock     : 4,        // stock bajo (< minStock = 6)
+        minStock  : 6,
+        description: 'Papas fritas sabor original 45 g',
+      },
+      {
+        id        : 'p-003',
+        barcode   : '7501017020498',
+        name      : 'Pan Bimbo Grande',
+        category  : 'Panadería',
+        buyPrice  : 28.00,
+        sellPrice : 46.00,
+        stock     : 0,        // sin stock
+        minStock  : 2,
+        description: 'Pan de caja blanco grande 680 g',
+      },
+      {
+        id        : 'p-004',
+        barcode   : '7501055361507',
+        name      : 'Agua Bonafont 1 L',
+        category  : 'Bebidas',
+        buyPrice  : 5.50,
+        sellPrice : 11.00,
+        stock     : 36,
+        minStock  : 10,
+        description: 'Agua purificada botella 1 litro',
+      },
+      {
+        id        : 'p-005',
+        barcode   : '7501000591016',
+        name      : 'Leche Lala Entera 1 L',
+        category  : 'Lácteos',
+        buyPrice  : 18.00,
+        sellPrice : 26.00,
+        stock     : 12,
+        minStock  : 6,
+        description: 'Leche entera pasteurizada 1 litro',
+      },
+      {
+        id        : 'p-006',
+        barcode   : '7501003123018',
+        name      : 'Jabón Zote Blanco',
+        category  : 'Limpieza',
+        buyPrice  : 9.00,
+        sellPrice : 16.00,
+        stock     : 20,
+        minStock  : 4,
+        description: 'Jabón de lavado 400 g',
+      },
+    ],
+
+    sales: [
+      /* Venta de ejemplo para poblar el historial */
+      {
+        id          : 's-demo-001',
+        folio       : 1001,
+        date        : new Date(Date.now() - 86400000).toISOString(), // ayer
+        cashier     : 'Ana López',
+        items       : [
+          { productId: 'p-001', name: 'Coca-Cola 600 ml', qty: 3, sellPrice: 18.00, buyPrice: 10.00 },
+          { productId: 'p-004', name: 'Agua Bonafont 1 L',  qty: 2, sellPrice: 11.00, buyPrice: 5.50  },
+        ],
+        subtotal    : 76.00,
+        discount    : 0,
+        iva         : 12.16,
+        total       : 88.16,
+        method      : 'cash',
+        cashReceived: 100.00,
+        change      : 11.84,
+        cardRef     : '',
+      },
+    ],
+
+    kanban: [
+      { id: 'k-001', title: 'Reponer stock de Papas Sabritas', description: 'Solo quedan 4 unidades (mínimo 6)', status: 'pending',  createdAt: new Date().toISOString() },
+      { id: 'k-002', title: 'Inventario físico semanal',        description: 'Verificar conteos cada lunes',         status: 'progress', createdAt: new Date().toISOString() },
+      { id: 'k-003', title: 'Actualizar precios de Lácteos',    description: 'Ajuste de precios del proveedor',       status: 'review',   createdAt: new Date().toISOString() },
+      { id: 'k-004', title: 'Configurar impresora de tickets',  description: 'Térmica 80 mm conectada por USB',       status: 'done',     createdAt: new Date().toISOString() },
+    ],
+
+    folio: 1001, // el siguiente folio a generar será folio + 1
+  };
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   3. PERSISTENCIA  (localStorage)
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+/**
+ * Carga el estado desde localStorage.
+ * Si no existe o está corrupto, usa los datos por defecto.
+ */
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      state = JSON.parse(raw);
+      /* Migración defensiva: añadir campos nuevos si faltan */
+      if (!state.config)   state.config   = buildDefaultState().config;
+      if (!state.products) state.products = buildDefaultState().products;
+      if (!state.sales)    state.sales    = [];
+      if (!state.kanban)   state.kanban   = buildDefaultState().kanban;
+      if (!state.folio)    state.folio    = 1001;
+      return;
+    } catch (e) {
+      console.warn('[POS] Estado corrupto, restaurando datos de ejemplo.', e);
+    }
+  }
+  state = buildDefaultState();
+  saveState();
+}
+
+/**
+ * Serializa el estado en localStorage.
+ * Llamar tras cualquier mutación del estado.
+ */
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error('[POS] Error al guardar estado:', e);
+    toast('Error al guardar datos en el dispositivo', 'danger');
+  }
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   4. UTILIDADES GENERALES
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+/** Genera un ID único tipo "id_1718540123456_abc12" */
+function uid() {
+  return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+/** Escapa HTML para prevenir XSS */
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Formatea un número como moneda usando la config actual */
+function money(n) {
+  const cur  = state?.config?.currency ?? '$';
+  const num  = Number(n) || 0;
+  return cur + num.toFixed(2);
+}
+
+/** Retorna la fecha de hoy en formato ISO YYYY-MM-DD */
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Hace N días atrás en ISO */
+function daysAgoISO(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Descarga un CSV desde una matriz de filas */
+function downloadCSV(rows, filename) {
+  const content = rows
+    .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** Descarga el estado completo como JSON (backup) */
+function exportDataJSON() {
+  const blob = new Blob(
+    [JSON.stringify(state, null, 2)],
+    { type: 'application/json' }
+  );
+  const url = URL.createObjectURL(blob);
+  const a   = Object.assign(document.createElement('a'), {
+    href    : url,
+    download: `pos_backup_${todayISO()}.json`,
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   5. SISTEMA DE TOASTS
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+/**
+ * Muestra una notificación tipo toast.
+ * @param {string} message  - Texto a mostrar
+ * @param {'default'|'success'|'danger'|'warning'} type - Tipo visual
+ * @param {number} duration - Milisegundos antes de desaparecer (0 = manual)
+ */
+function toast(message, type = 'default', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.setAttribute('role', 'status');
+  el.innerHTML = `<div class="toast-dot" aria-hidden="true"></div><span>${esc(message)}</span>`;
+  container.appendChild(el);
+
+  /* Animar entrada en el siguiente frame */
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('show'));
+  });
+
+  /* Remover automáticamente */
+  if (duration > 0) {
+    setTimeout(() => dismissToast(el), duration);
+  }
+
+  return el; /* permite dismiss manual si duration === 0 */
+}
+
+function dismissToast(el) {
+  el.classList.add('hiding');
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   6. SISTEMA DE TABS
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+const TAB_PAGES = {
+  pos       : 'page-pos',
+  inventory : 'page-inventory',
+  history   : 'page-history',
+  reports   : 'page-reports',
+  kanban    : 'page-kanban',
+  config    : 'page-config',
+};
+
+function openTab(tabKey) {
+  /* Desactivar todos */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tabKey;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-current', isActive ? 'page' : 'false');
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  const pageId = TAB_PAGES[tabKey];
+  if (pageId) document.getElementById(pageId)?.classList.add('active');
+
+  /* Hook: acciones al cambiar de tab */
+  if (tabKey === 'config')    syncConfigForm();
+  if (tabKey === 'inventory') updateInventoryBadge();
+  if (tabKey === 'kanban')    updateKanbanBadge();
+}
+
+/* Binding de tabs */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => openTab(btn.dataset.tab));
+});
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   7. MODAL DE CONFIRMACIÓN DOBLE
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+let _confirmCallback = null;
+
+/**
+ * Abre un modal de confirmación con doble paso.
+ * @param {Object} opts
+ * @param {string}   opts.title    - Título del modal
+ * @param {string}   opts.message  - Descripción de la acción
+ * @param {string}   [opts.icon]   - Emoji/icono visual
+ * @param {string}   [opts.okText] - Texto del botón de confirmación
+ * @param {string}   [opts.okClass]- Clase del botón (btn-danger | btn-warning)
+ * @param {Function} opts.onConfirm- Callback al confirmar
+ */
+function openConfirm({ title, message, icon = '⚠️', okText = 'Confirmar', okClass = 'btn-danger', onConfirm }) {
+  document.getElementById('confirm-icon').textContent      = icon;
+  document.getElementById('confirm-title-text').textContent = title;
+  document.getElementById('confirm-msg-text').textContent   = message;
+
+  const okBtn = document.getElementById('btn-confirm-ok');
+  okBtn.textContent = okText;
+  okBtn.className   = `btn ${okClass}`;
+  okBtn.style.minWidth = '110px';
+
+  _confirmCallback = onConfirm;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('modal-confirm').classList.remove('open');
+  _confirmCallback = null;
+}
+
+document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirm);
+document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+  closeConfirm();
+  if (typeof _confirmCallback === 'function') _confirmCallback();
+});
+
+/* Cerrar con click en overlay */
+document.getElementById('modal-confirm').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   8. RELOJ EN TIEMPO REAL
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function updateClock() {
+  const now = new Date();
+  const hh  = String(now.getHours()).padStart(2, '0');
+  const mm  = String(now.getMinutes()).padStart(2, '0');
+  const ss  = String(now.getSeconds()).padStart(2, '0');
+  const el  = document.getElementById('hdr-clock');
+  if (el) el.textContent = `${hh}:${mm}:${ss}`;
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   9. ACTUALIZAR HEADER (nombre, cajero, folio)
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function updateHeader() {
+  const cfg = state.config;
+  document.getElementById('hdr-biz-name').textContent = cfg.bizName || 'Mi Negocio';
+  document.getElementById('hdr-cashier').textContent  = cfg.cashier || '—';
+  document.getElementById('hdr-folio').textContent    = '#' + (state.folio + 1);
+  document.title = (cfg.bizName || 'POS') + ' — Punto de Venta';
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   10. CONFIG — sincronizar formulario
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function syncConfigForm() {
+  const cfg = state.config;
+  document.getElementById('cfg-biz-name').value  = cfg.bizName   ?? '';
+  document.getElementById('cfg-rfc').value       = cfg.rfc       ?? '';
+  document.getElementById('cfg-address').value   = cfg.address   ?? '';
+  document.getElementById('cfg-phone').value     = cfg.phone     ?? '';
+  document.getElementById('cfg-cashier').value   = cfg.cashier   ?? '';
+  document.getElementById('cfg-footer').value    = cfg.footer    ?? '';
+  document.getElementById('cfg-iva').value       = cfg.iva       ?? 16;
+  document.getElementById('cfg-iva-mode').value  = cfg.ivaMode   ?? 'excluded';
+  document.getElementById('cfg-currency').value  = cfg.currency  ?? '$';
+}
+
+function saveConfig() {
+  state.config.bizName  = document.getElementById('cfg-biz-name').value.trim();
+  state.config.rfc      = document.getElementById('cfg-rfc').value.trim();
+  state.config.address  = document.getElementById('cfg-address').value.trim();
+  state.config.phone    = document.getElementById('cfg-phone').value.trim();
+  state.config.cashier  = document.getElementById('cfg-cashier').value.trim();
+  state.config.footer   = document.getElementById('cfg-footer').value.trim();
+  state.config.iva      = parseFloat(document.getElementById('cfg-iva').value) || 16;
+  state.config.ivaMode  = document.getElementById('cfg-iva-mode').value;
+  state.config.currency = document.getElementById('cfg-currency').value || '$';
+  saveState();
+  updateHeader();
+  toast('Configuración guardada correctamente', 'success');
+}
+
+document.getElementById('btn-save-config').addEventListener('click', saveConfig);
+
+/* Exportar datos */
+document.getElementById('btn-export-data').addEventListener('click', () => {
+  exportDataJSON();
+  toast('Backup descargado', 'success');
+});
+
+/* Limpiar historial */
+document.getElementById('btn-clear-history').addEventListener('click', () => {
+  openConfirm({
+    title    : 'Limpiar historial de ventas',
+    message  : 'Se eliminarán TODAS las ventas registradas. Esta acción no se puede deshacer.',
+    icon     : '🗑️',
+    okText   : 'Sí, limpiar historial',
+    okClass  : 'btn-warning',
+    onConfirm: () => {
+      state.sales = [];
+      state.folio = 1001;
+      saveState();
+      updateHeader();
+      toast('Historial de ventas eliminado', 'warning');
+    },
+  });
+});
+
+/* Restablecer todo */
+document.getElementById('btn-reset-all').addEventListener('click', () => {
+  openConfirm({
+    title    : '¿Restablecer todo el sistema?',
+    message  : 'Se borrarán TODOS los productos, ventas, tareas y configuración. El sistema volverá a los datos de ejemplo. Esta acción es irreversible.',
+    icon     : '💥',
+    okText   : 'Sí, restablecer todo',
+    okClass  : 'btn-danger',
+    onConfirm: () => {
+      localStorage.removeItem(STORAGE_KEY);
+      loadState();
+      updateHeader();
+      syncConfigForm();
+      updateInventoryBadge();
+      updateKanbanBadge();
+      toast('Sistema restablecido a datos de ejemplo', 'default');
+    },
+  });
+});
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   11. BADGES DE ALERTAS EN TABS
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function updateInventoryBadge() {
+  const alertCount = state.products.filter(
+    p => p.stock <= 0 || p.stock <= p.minStock
+  ).length;
+  const badge = document.getElementById('badge-inventory');
+  badge.textContent    = alertCount;
+  badge.style.display  = alertCount > 0 ? 'inline-flex' : 'none';
+}
+
+function updateKanbanBadge() {
+  const pending = state.kanban.filter(t => t.status === 'pending').length;
+  const badge   = document.getElementById('badge-kanban');
+  badge.textContent   = pending;
+  badge.style.display = pending > 0 ? 'inline-flex' : 'none';
+}
+
+/* Inicializar contadores de kanban en placeholder */
+function renderKanbanCounts() {
+  const statuses = ['pending', 'progress', 'review', 'done'];
+  statuses.forEach(st => {
+    const count = state.kanban.filter(t => t.status === st).length;
+    const el    = document.getElementById(`k-count-${st}`);
+    if (el) el.textContent = count;
+  });
+}
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   12. KEYBOARD SHORTCUTS
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+document.addEventListener('keydown', e => {
+  /* Escape cierra cualquier modal abierto */
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => {
+      m.classList.remove('open');
+    });
+  }
+
+  /* Ctrl/Cmd + 1-6 navegan entre tabs */
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+    const tabKeys = ['pos', 'inventory', 'history', 'reports', 'kanban', 'config'];
+    const idx     = parseInt(e.key) - 1;
+    if (idx >= 0 && idx < tabKeys.length) {
+      e.preventDefault();
+      openTab(tabKeys[idx]);
+    }
+  }
+});
+
+/* Cerrar modales genéricos con click en overlay */
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+/* ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+   13. INICIALIZACIÓN
+── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+function init() {
+  loadState();
+  updateHeader();
+  updateInventoryBadge();
+  updateKanbanBadge();
+  renderKanbanCounts();
+
+  /* Fechas por defecto en filtros */
+  const today = todayISO();
+  const month = daysAgoISO(30);
+
+  ['hist-from', 'rep-from'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = month;
+  });
+  ['hist-to', 'rep-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+
+  /* Reloj */
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* Bienvenida */
+  toast(`Bienvenido, ${state.config.cashier || 'cajero'}`, 'success', 3000);
+
+  console.info('[POS] Sistema iniciado. Estado:', state);
+  console.info('[POS] Atajos: Ctrl+1…6 para navegar tabs | Escape cierra modales');
+}
+
+init();
+</script>
+</body>
+</html>
